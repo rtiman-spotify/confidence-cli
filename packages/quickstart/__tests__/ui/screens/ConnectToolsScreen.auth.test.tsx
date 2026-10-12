@@ -3,6 +3,7 @@ import {
   act,
   renderScreen,
   createProjectDir,
+  isolateHome,
   prepareAuthTokens,
   waitFor,
   buildExpiredJwt,
@@ -37,9 +38,10 @@ describe('ConnectToolsScreen', () => {
         http.post('https://mcp.confidence.dev/mcp/docs', () => HttpResponse.error()),
       );
 
+      using project = createProjectDir();
+      using _home = isolateHome(project.path);
       using _auth = prepareAuthTokens('none');
       using _pref = createMcpPreference('connected');
-      using project = createProjectDir();
 
       // Act
       using sut = renderScreen(<ConnectToolsScreen />, {
@@ -175,8 +177,9 @@ describe('ConnectToolsScreen', () => {
         ),
       );
 
-      using _auth = prepareAuthTokens('none');
       using project = createProjectDir();
+      using _home = isolateHome(project.path);
+      using _auth = prepareAuthTokens('none');
 
       using sut = renderScreen(<ConnectToolsScreen />, {
         screen: ScreenId.ConnectTools,
@@ -203,7 +206,7 @@ type SeedMcpOpts = {
 };
 
 function seedMcpRegistration(projectDir: string, opts?: SeedMcpOpts) {
-  vi.stubEnv('HOME', projectDir);
+  const home = isolateHome(projectDir);
 
   const headers = opts?.token ? { Authorization: `Bearer ${opts.token}` } : undefined;
   const servers = {
@@ -223,7 +226,7 @@ function seedMcpRegistration(projectDir: string, opts?: SeedMcpOpts) {
 
   return {
     [Symbol.dispose]() {
-      vi.unstubAllEnvs();
+      home[Symbol.dispose]();
     },
   };
 }
