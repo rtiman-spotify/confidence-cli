@@ -43,20 +43,28 @@ confidence quickstart      # Launch the interactive setup wizard
 
 ### Feature Flags
 
-| Command                  | Description                                            |
-| ------------------------ | ------------------------------------------------------ |
-| `confidence flags setup` | Set up feature flags in your project via guided wizard |
+| Command                               | Description                                            |
+| ------------------------------------- | ------------------------------------------------------ |
+| `confidence flags setup`              | Set up feature flags in your project via guided wizard |
+| `confidence flags list`               | List all flags in project                              |
+| `confidence flags get <flag-key>`     | Get flag details (variants, targeting, status)         |
+| `confidence flags create <flag-key>`  | Create a new flag                                      |
+| `confidence flags update <flag-key>`  | Update flag description or variants                    |
+| `confidence flags toggle <flag-key>`  | Enable or disable a flag for a client                  |
+| `confidence flags resolve <flag-key>` | Resolve flag value for given context                   |
+| `confidence flags target <flag-key>`  | View or update targeting rules                         |
+| `confidence flags archive <flag-key>` | Archive a flag                                         |
 
 ### Events
 
 | Command                                | Description                             |
 | -------------------------------------- | --------------------------------------- |
+| `confidence events setup`              | Set up event tracking via guided wizard |
 | `confidence events list`               | List all event definitions              |
 | `confidence events create --name <id>` | Create a new event definition           |
 | `confidence events update <name>`      | Update an event definition's schema     |
 | `confidence events delete <name>`      | Delete an event definition              |
 | `confidence events usage <name>`       | Show recent event usage statistics      |
-| `confidence events setup`              | Set up event tracking via guided wizard |
 
 ### Session Recordings
 
@@ -82,6 +90,29 @@ confidence quickstart      # Launch the interactive setup wizard
 | `confidence warehouse connector create-event`        | Create event data connector                        |
 | `confidence warehouse assignment-table create`       | Create an assignment table for experiment analysis |
 | `confidence warehouse crypto-key create`             | Create a crypto key (Snowflake)                    |
+
+### SDK
+
+| Command                  | Description                                     |
+| ------------------------ | ----------------------------------------------- |
+| `confidence sdk install` | Detect framework and install the Confidence SDK |
+| `confidence sdk setup`   | Set up the Confidence SDK in your project       |
+
+### Documentation
+
+| Command                          | Description                      |
+| -------------------------------- | -------------------------------- |
+| `confidence docs search <query>` | Search Confidence documentation  |
+| `confidence docs grep <pattern>` | Grep through documentation       |
+| `confidence docs read <page>`    | Read a docs page in the terminal |
+
+### AI Plugin
+
+| Command                       | Description                                            |
+| ----------------------------- | ------------------------------------------------------ |
+| `confidence plugin install`   | Install the Confidence AI plugin for your coding agent |
+| `confidence plugin update`    | Update the Confidence AI plugin to the latest version  |
+| `confidence plugin uninstall` | Remove the Confidence AI plugin from your coding agent |
 
 ### Migration
 
