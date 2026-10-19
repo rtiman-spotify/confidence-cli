@@ -36,6 +36,7 @@ describe('data command group', () => {
     const output = await sut(['data', '--help']);
 
     expect(output).toContain('confidence data <command>');
+    expect(output).toContain('confidence data fact-tables');
     expect(output).not.toMatch(/onboard|discover|proposal|workflow/iu);
   });
 
