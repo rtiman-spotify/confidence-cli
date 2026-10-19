@@ -96,8 +96,11 @@ confidence quickstart      # Launch the interactive setup wizard
 | Command                                                           | Description                                     |
 | ----------------------------------------------------------------- | ----------------------------------------------- |
 | `confidence data fact-tables list`                                | List one page of fact tables                    |
-| `confidence data fact-tables get factTables/<id>`                 | Get the complete resource and lifecycle state   |
+| `confidence data fact-tables get [name]`                          | Get the complete resource and lifecycle state   |
 | `confidence data fact-tables create --from-file fact.json [--id]` | Create one fact table from a resource JSON file |
+
+Get requires a qualified resource name, supplied either positionally (for example,
+`get factTables/purchases`) or with `--name factTables/purchases`.
 
 List supports `--page-size`, `--page-token`, `--filter` (Lucene query string),
 `--show-deleted`, and `--order-by` (for example `displayName:desc,createTime:asc`).
@@ -149,6 +152,42 @@ malformed successful response), the write outcome may be unknown: inspect list/g
 before deciding whether to retry. When `--id` is set, the error includes the qualified
 resource name to look up. Responses must contain resource objects with qualified
 `factTables/<id>` names; malformed get/list responses are errors, not successful output.
+
+### Fact Table Column Suggestions
+
+```bash
+confidence data fact-tables suggest-columns --from-file approved-schema.json --json
+confidence data fact-tables suggest-columns --from-file approved-schema.json --dry-run --json
+```
+
+Explicitly invoking `suggest-columns` approves sending **only the schema in the supplied file** to
+`POST /v1/factTables:suggestFactTableColumns`. Review the file before invoking it. The JSON must be
+an object with a non-empty `schema` array:
+
+```json
+{
+  "schema": [
+    { "name": "event_time", "type": "COLUMN_TYPE_TIMESTAMP", "repeated": false },
+    { "name": "user_id", "type": "COLUMN_TYPE_STRING" },
+    { "name": "amount", "type": "COLUMN_TYPE_DECIMAL" }
+  ]
+}
+```
+
+Each column requires a non-empty `name`. Optional `type` accepts a Metrics `ColumnType` enum name
+(`COLUMN_TYPE_UNSPECIFIED`, `COLUMN_TYPE_STRING`, `COLUMN_TYPE_INT32`, `COLUMN_TYPE_INT64`,
+`COLUMN_TYPE_DOUBLE`, `COLUMN_TYPE_BOOLEAN`, `COLUMN_TYPE_DATE`, `COLUMN_TYPE_TIMESTAMP`,
+`COLUMN_TYPE_BYTES`, `COLUMN_TYPE_TIMESTAMP_WITHOUT_TIMEZONE`, `COLUMN_TYPE_DECIMAL`, or
+`COLUMN_TYPE_HLL_SKETCH`) or its numeric value (0–11 in that order). Optional `repeated` must be a
+boolean. Other fields, including annotations, rows, sample results, and warehouse configuration,
+are rejected. The command does not discover schemas or read warehouse rows/configuration.
+
+The response contains either `suggestion` (timestamp column, entity mappings, measures, and
+dimensions) or `error`. An `error`, even with HTTP 200, exits nonzero; malformed oneof responses also
+fail. Suggestions are advisory: they do **not** create/update a table, certify column semantics,
+or start a workflow or MCP call. Review classifications before using them. `--dry-run` validates
+the same input and prints the request without authentication or network access. `--json` preserves
+the full response in the standard `{ "data": ... }` envelope; `--output table` renders it as a table.
 
 ### SDK
 

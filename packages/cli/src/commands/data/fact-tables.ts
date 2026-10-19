@@ -2,10 +2,11 @@ import type { Argv } from 'yargs';
 import { noop } from '@spotify-confidence/shared-kernel';
 import { createFactTableCmd, getFactTableCmd, listFactTablesCmd } from '@features/data/index.js';
 import { safely } from '@utils/index.js';
+import { factTableSuggestionsCommand } from './column-suggestions.js';
 
 export const factTablesCommand = {
   command: 'fact-tables',
-  describe: 'List, inspect, and create fact tables',
+  describe: 'List, inspect, and create fact tables, or suggest column classifications',
   builder(yargs: Argv) {
     return yargs
       .command(
@@ -58,7 +59,8 @@ export const factTablesCommand = {
             }),
         safely(createFactTableCmd),
       )
-      .demandCommand(1, 'Available actions: list, get, create')
+      .command(factTableSuggestionsCommand)
+      .demandCommand(1, 'Available actions: list, get, create, suggest-columns')
       .strict();
   },
   handler: noop,
