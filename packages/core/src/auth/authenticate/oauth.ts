@@ -8,6 +8,7 @@ import {
   AUTH_CLIENT_ID_SIGNUP,
   AUTH_CLIENT_ID_LOGIN,
   AUTH_CALLBACK_PORT,
+  SESSION_EXPIRED_ERR,
 } from './constants.js';
 import { generatePKCE } from './pkce.js';
 import { openBrowser } from '../../system/browser.js';
@@ -35,7 +36,7 @@ function resolveOrganization(profile?: string): string | undefined {
 export async function refreshAccessToken(profile?: string): Promise<AuthResult> {
   const creds = readCredentials(profile);
   if (!creds?.refreshToken) {
-    throw new Error('No refresh token available');
+    throw new Error('No refresh token available', { cause: SESSION_EXPIRED_ERR });
   }
 
   const body = new URLSearchParams({
@@ -52,7 +53,7 @@ export async function refreshAccessToken(profile?: string): Promise<AuthResult> 
   });
 
   if (!response.ok) {
-    throw new Error('Session expired');
+    throw new Error('Session expired', { cause: SESSION_EXPIRED_ERR });
   }
 
   const data = (await response.json()) as TokenResponse;

@@ -1,6 +1,7 @@
 export {
   authenticate,
   refreshAccessToken,
+  hasExpiredSession,
   AUTH_CALLBACK_PORT,
   type AuthResult,
 } from './authenticate/index.js';

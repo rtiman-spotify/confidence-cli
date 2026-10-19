@@ -2,6 +2,7 @@ import {
   loadPersistedToken,
   isValidToken as isValid,
   refreshAccessToken,
+  hasExpiredSession,
   authenticate,
   isInteractive,
 } from '@spotify-confidence/core';
@@ -20,25 +21,26 @@ export async function tryLoadAuthToken(profile?: string): Promise<LoadTokenResul
   try {
     const refreshed = await refreshAccessToken(profile);
     return { token: refreshed.accessToken, expired: false };
-  } catch {
-    return { token: null, expired: true };
+  } catch (err) {
+    if (hasExpiredSession(err)) return { token: null, expired: true };
+    else throw err;
   }
 }
 
 export async function tryResolveAuth(profile?: string): Promise<string | null> {
-  const loaded = await tryLoadAuthToken(profile);
-  if (loaded.token) return loaded.token;
-
-  if (!isInteractive()) {
-    fail(
-      loaded.expired
-        ? 'Token expired. Run "confidence login" to re-authenticate.'
-        : 'Not logged in. Run "confidence login" first.',
-    );
-    return null;
-  }
-
   try {
+    const loaded = await tryLoadAuthToken(profile);
+    if (loaded.token) return loaded.token;
+
+    if (!isInteractive()) {
+      fail(
+        loaded.expired
+          ? 'Token expired. Run "confidence login" to re-authenticate.'
+          : 'Not logged in. Run "confidence login" first.',
+      );
+      return null;
+    }
+
     message(
       loaded.expired
         ? 'Session expired. Opening browser to re-authenticate... (Ctrl+C to cancel)'
