@@ -1,36 +1,28 @@
-import { prepareAuthTokens } from '@spotify-confidence/testing/auth';
-import { buildTestJwt } from '@spotify-confidence/testing/auth';
+import { prepareAuthTokens, buildTestJwt } from '@spotify-confidence/testing/auth';
+import { server, tokenResponse, tokenError } from '@spotify-confidence/testing';
 import { captureOutput } from '../helpers/capture.js';
 import { simulateTTY } from '../helpers/simulate-tty.js';
 
 import type { AuthResult } from '@spotify-confidence/core';
 
 const mockAuthenticate = vi.fn<() => Promise<AuthResult>>();
-const mockRefreshAccessToken = vi.fn<() => Promise<AuthResult>>();
-const mockIsInteractive = vi.fn<() => boolean>();
 
-vi.mock('@spotify-confidence/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@spotify-confidence/core')>();
-  return {
-    ...actual,
-    authenticate: (...args: unknown[]) => mockAuthenticate(...(args as [])),
-    refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...(args as [])),
-    isInteractive: () => mockIsInteractive(),
-  };
-});
+vi.mock('@spotify-confidence/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@spotify-confidence/core')>()),
+  authenticate: (...args: unknown[]) => mockAuthenticate(...(args as [])),
+}));
 
-const { tryResolveAuth: resolveToken } = await import('@utils/auth.js');
+const { tryResolveAuth } = await import('@utils/auth.js');
 
 describe('resolveToken', () => {
   it('returns a valid persisted token without triggering login', async () => {
     using _auth = prepareAuthTokens('valid');
     using output = captureOutput();
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBeTruthy();
     expect(mockAuthenticate).not.toHaveBeenCalled();
-    expect(mockRefreshAccessToken).not.toHaveBeenCalled();
     expect(output.stdout).toBe('');
   });
 
@@ -38,16 +30,11 @@ describe('resolveToken', () => {
     using _auth = prepareAuthTokens('stale');
     using output = captureOutput();
     const freshToken = buildTestJwt({ email: 'refreshed@example.com' });
-    mockRefreshAccessToken.mockResolvedValue({
-      accessToken: freshToken,
-      region: 'EU',
-      workspace: 'test-ws',
-    });
+    server.use(tokenResponse(freshToken));
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBe(freshToken);
-    expect(mockRefreshAccessToken).toHaveBeenCalled();
     expect(mockAuthenticate).not.toHaveBeenCalled();
     expect(output.stdout).toBe('');
   });
@@ -56,7 +43,6 @@ describe('resolveToken', () => {
     using _auth = prepareAuthTokens('none');
     using _tty = simulateTTY(true);
     using output = captureOutput();
-    mockIsInteractive.mockReturnValue(true);
     const freshToken = buildTestJwt({ email: 'new@example.com' });
     mockAuthenticate.mockResolvedValue({
       accessToken: freshToken,
@@ -64,7 +50,7 @@ describe('resolveToken', () => {
       workspace: 'test-ws',
     });
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBe(freshToken);
     expect(mockAuthenticate).toHaveBeenCalled();
@@ -77,8 +63,7 @@ describe('resolveToken', () => {
     using _auth = prepareAuthTokens('stale');
     using _tty = simulateTTY(true);
     using output = captureOutput();
-    mockIsInteractive.mockReturnValue(true);
-    mockRefreshAccessToken.mockRejectedValue(new Error('Session expired'));
+    server.use(tokenError());
     const freshToken = buildTestJwt({ email: 'reauth@example.com' });
     mockAuthenticate.mockResolvedValue({
       accessToken: freshToken,
@@ -86,10 +71,9 @@ describe('resolveToken', () => {
       workspace: 'ws-2',
     });
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBe(freshToken);
-    expect(mockRefreshAccessToken).toHaveBeenCalled();
     expect(mockAuthenticate).toHaveBeenCalled();
     expect(output.stdout).toContain('Session expired');
     expect(output.stdout).toContain('Opening browser to re-authenticate');
@@ -98,9 +82,8 @@ describe('resolveToken', () => {
   it('fails with error in non-interactive mode when not logged in', async () => {
     using _auth = prepareAuthTokens('none');
     using output = captureOutput();
-    mockIsInteractive.mockReturnValue(false);
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBeNull();
     expect(output.stderr).toContain('Not logged in');
@@ -110,9 +93,8 @@ describe('resolveToken', () => {
   it('fails with error in non-interactive mode when token is expired', async () => {
     using _auth = prepareAuthTokens('expired');
     using output = captureOutput();
-    mockIsInteractive.mockReturnValue(false);
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBeNull();
     expect(output.stderr).toContain('Token expired');
@@ -123,10 +105,9 @@ describe('resolveToken', () => {
     using _auth = prepareAuthTokens('none');
     using _tty = simulateTTY(true);
     using output = captureOutput();
-    mockIsInteractive.mockReturnValue(true);
     mockAuthenticate.mockRejectedValue(new Error('Port 8084 in use'));
 
-    const sut = await resolveToken();
+    const sut = await tryResolveAuth();
 
     expect(sut).toBeNull();
     expect(output.stderr).toContain('Login failed');
@@ -136,7 +117,6 @@ describe('resolveToken', () => {
     using _auth = prepareAuthTokens('none');
     using _tty = simulateTTY(true);
     using _output = captureOutput();
-    mockIsInteractive.mockReturnValue(true);
     const freshToken = buildTestJwt();
     mockAuthenticate.mockResolvedValue({
       accessToken: freshToken,
@@ -144,7 +124,7 @@ describe('resolveToken', () => {
       workspace: 'ws',
     });
 
-    await resolveToken('staging');
+    await tryResolveAuth('staging');
 
     expect(mockAuthenticate).toHaveBeenCalledWith(expect.objectContaining({ profile: 'staging' }));
   });
