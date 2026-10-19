@@ -21,10 +21,6 @@ vi.mock('@spotify-confidence/core', async (importOriginal) => {
 
 const { tryResolveAuth: resolveToken } = await import('@utils/auth.js');
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
 describe('resolveToken', () => {
   it('returns a valid persisted token without triggering login', async () => {
     using _auth = prepareAuthTokens('valid');
