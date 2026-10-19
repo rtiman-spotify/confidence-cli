@@ -1,12 +1,14 @@
 import {
   loadPersistedToken,
   isValidToken as isValid,
+  decodeJwtPayload,
   refreshAccessToken,
   hasExpiredSession,
+  hasMalformedToken,
   authenticate,
   isInteractive,
 } from '@spotify-confidence/core';
-import { fail, message } from '@output/print.js';
+import { fail, hint } from '@output/print.js';
 
 type LoadTokenResult = {
   token: string | null;
@@ -19,11 +21,13 @@ export async function tryLoadAuthToken(profile?: string): Promise<LoadTokenResul
   if (isValid(token)) return { token, expired: false };
 
   try {
+    decodeJwtPayload(token);
     const refreshed = await refreshAccessToken(profile);
     return { token: refreshed.accessToken, expired: false };
   } catch (err) {
+    if (hasMalformedToken(err)) return { token: null, expired: false };
     if (hasExpiredSession(err)) return { token: null, expired: true };
-    else throw err;
+    throw err;
   }
 }
 
@@ -41,7 +45,7 @@ export async function tryResolveAuth(profile?: string): Promise<string | null> {
       return null;
     }
 
-    message(
+    hint(
       loaded.expired
         ? 'Session expired. Opening browser to re-authenticate... (Ctrl+C to cancel)'
         : 'Not logged in to Confidence. Opening browser to authenticate... (Ctrl+C to cancel)',
@@ -50,11 +54,10 @@ export async function tryResolveAuth(profile?: string): Promise<string | null> {
     const result = await authenticate({
       mode: 'login',
       profile,
-      signal: AbortSignal.timeout(120_000),
-      onUrl: (url) => message(`If the browser did not open, visit:\n${url}`),
+      onUrl: (url) => hint(`If the browser did not open, visit:\n${url}`),
     });
 
-    message(`Authenticated as ${result.workspace ?? 'unknown'} (${result.region})`);
+    hint(`Authenticated as ${result.workspace ?? 'unknown'} (${result.region})`);
     return result.accessToken;
   } catch (err) {
     fail(`Login failed: ${(err as Error).message}`);

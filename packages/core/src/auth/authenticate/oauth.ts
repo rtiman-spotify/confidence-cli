@@ -8,6 +8,7 @@ import {
   AUTH_CLIENT_ID_SIGNUP,
   AUTH_CLIENT_ID_LOGIN,
   AUTH_CALLBACK_PORT,
+  AUTH_TIMEOUT_MS,
   SESSION_EXPIRED_ERR,
 } from './constants.js';
 import { generatePKCE } from './pkce.js';
@@ -79,9 +80,10 @@ export function authenticate(opts: {
   const organization = opts.mode === 'login' ? resolveOrganization(opts.profile) : undefined;
   const { verifier, challenge } = generatePKCE();
   const redirectUri = `http://localhost:${AUTH_CALLBACK_PORT}/callback`;
+  const signal = opts.signal ?? AbortSignal.timeout(AUTH_TIMEOUT_MS);
 
   return new Promise((resolve, reject) => {
-    if (opts.signal?.aborted) {
+    if (signal.aborted) {
       reject(new Error('Authentication cancelled'));
       return;
     }
@@ -141,16 +143,14 @@ export function authenticate(opts: {
       openBrowser(authUrl);
     });
 
-    if (opts.signal) {
-      opts.signal.addEventListener(
-        'abort',
-        () => {
-          server.close();
-          reject(new Error('Authentication cancelled'));
-        },
-        { once: true },
-      );
-    }
+    signal.addEventListener(
+      'abort',
+      () => {
+        server.close();
+        reject(new Error('Authentication cancelled'));
+      },
+      { once: true },
+    );
 
     server.on('error', (err) => {
       reject(

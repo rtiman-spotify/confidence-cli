@@ -4,8 +4,8 @@ import {
   extractOrganization,
   extractWorkspace,
 } from '@spotify-confidence/core';
-import { print, extractFlags } from '@output/print.js';
-import { tryResolveAuth } from '@utils/auth.js';
+import { print, extractFlags, fail } from '@output/print.js';
+import { tryLoadAuthToken } from '@utils/auth.js';
 
 export const whoamiCommand = {
   command: 'whoami',
@@ -13,8 +13,15 @@ export const whoamiCommand = {
   async handler(argv: Record<string, unknown>) {
     const profile = argv.profile as string | undefined;
 
-    const token = await tryResolveAuth(profile);
-    if (!token) return;
+    const { token, expired } = await tryLoadAuthToken(profile);
+    if (!token) {
+      fail(
+        expired
+          ? 'Auth expired. Run "confidence login" to re-authenticate.'
+          : 'Not logged in. Run "confidence login" first.',
+      );
+      return;
+    }
 
     const payload = decodeJwtPayload(token);
     const email = (payload.email as string) ?? undefined;

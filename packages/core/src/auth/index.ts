@@ -2,6 +2,7 @@ export {
   authenticate,
   refreshAccessToken,
   hasExpiredSession,
+  hasMalformedToken,
   AUTH_CALLBACK_PORT,
   type AuthResult,
 } from './authenticate/index.js';

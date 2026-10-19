@@ -1,8 +1,13 @@
+import { MALFORMED_TOKEN_ERR } from './authenticate/constants.js';
+
 export function decodeJwtPayload(token: string): Record<string, unknown> {
-  const parts = token.split('.');
-  if (parts.length < 2) throw new Error('Invalid JWT');
-  const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
-  return JSON.parse(payload) as Record<string, unknown>;
+  try {
+    const parts = token.split('.');
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    return JSON.parse(payload) as Record<string, unknown>;
+  } catch {
+    throw new Error('Invalid JWT', { cause: MALFORMED_TOKEN_ERR });
+  }
 }
 
 export function extractRegion(token: string): 'EU' | 'US' {
