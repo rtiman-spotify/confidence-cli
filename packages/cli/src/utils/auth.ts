@@ -41,13 +41,14 @@ export async function tryResolveAuth(profile?: string): Promise<string | null> {
   try {
     message(
       loaded.expired
-        ? 'Session expired. Opening browser to re-authenticate...'
-        : 'Not logged in to Confidence. Opening browser to authenticate...',
+        ? 'Session expired. Opening browser to re-authenticate... (Ctrl+C to cancel)'
+        : 'Not logged in to Confidence. Opening browser to authenticate... (Ctrl+C to cancel)',
     );
 
     const result = await authenticate({
       mode: 'login',
       profile,
+      signal: AbortSignal.timeout(120_000),
       onUrl: (url) => message(`If the browser did not open, visit:\n${url}`),
     });
 
