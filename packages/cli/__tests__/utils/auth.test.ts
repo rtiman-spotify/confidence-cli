@@ -19,7 +19,7 @@ vi.mock('@spotify-confidence/core', async (importOriginal) => {
   };
 });
 
-const { tryResolveAuthToken: resolveToken } = await import('@utils/auth.js');
+const { tryResolveAuth: resolveToken } = await import('@utils/auth.js');
 
 beforeEach(() => {
   vi.clearAllMocks();

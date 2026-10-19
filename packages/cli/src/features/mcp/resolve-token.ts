@@ -1,13 +1,13 @@
 import { message, fail } from '@output/print.js';
 import { authenticate } from '@spotify-confidence/core';
-import { tryLoadToken } from '@utils/auth.js';
+import { tryLoadAuthToken } from '@utils/auth.js';
 
 export async function resolveAuthToken(opts?: {
   forceNew?: boolean;
   profile?: string;
 }): Promise<string | null> {
   if (!opts?.forceNew) {
-    const { token } = await tryLoadToken(opts?.profile);
+    const { token } = await tryLoadAuthToken(opts?.profile);
     if (token) return token;
   }
 

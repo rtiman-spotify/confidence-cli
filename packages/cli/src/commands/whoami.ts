@@ -5,7 +5,7 @@ import {
   extractWorkspace,
 } from '@spotify-confidence/core';
 import { print, extractFlags } from '@output/print.js';
-import { tryResolveAuthToken } from '@utils/auth.js';
+import { tryResolveAuth } from '@utils/auth.js';
 
 export const whoamiCommand = {
   command: 'whoami',
@@ -13,7 +13,7 @@ export const whoamiCommand = {
   async handler(argv: Record<string, unknown>) {
     const profile = argv.profile as string | undefined;
 
-    const token = await tryResolveAuthToken(profile);
+    const token = await tryResolveAuth(profile);
     if (!token) return;
 
     const payload = decodeJwtPayload(token);

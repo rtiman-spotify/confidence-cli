@@ -12,7 +12,7 @@ type LoadTokenResult = {
   expired: boolean;
 };
 
-export async function tryLoadToken(profile?: string): Promise<LoadTokenResult> {
+export async function tryLoadAuthToken(profile?: string): Promise<LoadTokenResult> {
   const token = loadPersistedToken(profile);
   if (!token) return { token: null, expired: false };
   if (isValid(token)) return { token, expired: false };
@@ -25,8 +25,8 @@ export async function tryLoadToken(profile?: string): Promise<LoadTokenResult> {
   }
 }
 
-export async function tryResolveAuthToken(profile?: string): Promise<string | null> {
-  const loaded = await tryLoadToken(profile);
+export async function tryResolveAuth(profile?: string): Promise<string | null> {
+  const loaded = await tryLoadAuthToken(profile);
   if (loaded.token) return loaded.token;
 
   if (!isInteractive()) {
@@ -63,7 +63,7 @@ export function withAuth(
   fn: (argv: Record<string, unknown>, token: string) => Promise<void>,
 ): (argv: Record<string, unknown>) => Promise<void> {
   return async (argv) => {
-    const token = await tryResolveAuthToken(argv.profile as string | undefined);
+    const token = await tryResolveAuth(argv.profile as string | undefined);
     if (!token) return;
 
     await fn(argv, token);
