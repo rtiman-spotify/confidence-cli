@@ -3,7 +3,12 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { APP_NAME, CLI_VERSION } from '@meta';
-import { flushTelemetry, telemetryMiddleware } from '@utils/index.js';
+import {
+  debugMiddleware,
+  flushTelemetry,
+  noColorMiddleware,
+  telemetryMiddleware,
+} from '@utils/index.js';
 import {
   loginCommand,
   logoutCommand,
@@ -49,29 +54,28 @@ const cli = yargs(hideBin(process.argv))
     type: 'string',
     describe: 'Use named auth profile',
   })
-  .option('no-color', {
+  .option('color', {
     type: 'boolean',
-    default: false,
-    describe: 'Disable colors',
-    hidden: true,
+    default: true,
+    describe: 'Enable colors (use --no-color to disable)',
   })
   .option('dry-run', {
     type: 'boolean',
     default: false,
     describe: 'Preview without executing',
-    hidden: true,
   })
   .option('debug', {
     type: 'boolean',
     default: false,
     describe: 'Verbose/diagnostic output',
-    hidden: true,
   })
   .option('telemetry', {
     type: 'boolean',
     default: true,
     describe: 'Collect anonymous usage telemetry (disable with --no-telemetry)',
   })
+  .middleware(debugMiddleware)
+  .middleware(noColorMiddleware)
   .middleware(telemetryMiddleware)
   .command(loginCommand)
   .command(logoutCommand)

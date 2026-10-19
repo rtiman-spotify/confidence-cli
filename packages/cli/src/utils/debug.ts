@@ -1,0 +1,39 @@
+import { isDebug } from '@spotify-confidence/core';
+
+export function debug(label: string, detail: string): void {
+  if (!isDebug()) return;
+  process.stderr.write(`[debug] ${label}: ${detail}\n`);
+}
+
+type Handler<A extends unknown[], R> = (...args: A) => Promise<R>;
+
+export function withDebug<A extends unknown[], R>(fn: Handler<A, R>): Handler<A, R> {
+  return async (...args) => {
+    debug('command', fn.name || 'anonymous');
+    const start = performance.now();
+
+    const result = await fn(...args);
+
+    const end = performance.now() - start;
+    debug('timing', `${fn.name || 'command'} completed in ${end.toFixed(0)}ms`);
+    return result;
+  };
+}
+
+export function debugMiddleware(argv: Record<string, unknown>): void {
+  if (!argv.debug) return;
+
+  process.env.DEBUG = 'true';
+
+  const command = (argv._ as (string | number)[])?.join(' ') || 'unknown';
+  debug('command', command);
+
+  const args = Object.entries(argv)
+    .filter(([k]) => !k.startsWith('$') && k !== '_' && k !== 'debug')
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join(' ');
+
+  if (args) {
+    debug('args', args);
+  }
+}

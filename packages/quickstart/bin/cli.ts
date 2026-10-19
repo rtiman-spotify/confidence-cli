@@ -18,6 +18,11 @@ const cli = yargs(hideBin(process.argv))
     default: false,
     describe: 'Enable debug output and preserve terminal history',
   })
+  .option('color', {
+    type: 'boolean',
+    default: true,
+    describe: 'Enable colors (use --no-color to disable)',
+  })
   .option('dir', {
     type: 'string',
     describe: 'Project directory to run the wizard in',

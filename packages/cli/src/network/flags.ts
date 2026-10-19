@@ -2,10 +2,10 @@ import type { JsonObject } from '@spotify-confidence/shared-kernel';
 import {
   apiRequest,
   extractRegion,
-  mcpCallTool,
   type ApiResponse,
   type CallToolResult,
 } from '@spotify-confidence/core';
+import { mcpCallTool } from './client.js';
 import { serverOpts } from './config.js';
 
 function restOpts(token: string) {
