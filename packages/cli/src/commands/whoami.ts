@@ -1,30 +1,25 @@
-import { loadPersistedToken, validateToken, decodeJwtPayload } from '@spotify-confidence/core';
-import { print, fail, extractFlags } from '@output/print.js';
+import { decodeJwtPayload } from '@spotify-confidence/core';
+import { print, extractFlags } from '@output/print.js';
+import { tryResolveAuthToken } from '@utils/auth.js';
+
+const ORG_ID_KEY = 'https://confidence.dev/org_login_id';
+const REGION_KEY = 'https://confidence.dev/region';
+const ACCOUNT_KEY = 'https://confidence.dev/account_name';
 
 export const whoamiCommand = {
   command: 'whoami',
   describe: 'Show current user, org, region, and token expiry',
-  handler(argv: Record<string, unknown>) {
+  async handler(argv: Record<string, unknown>) {
     const profile = argv.profile as string | undefined;
 
-    const token = loadPersistedToken(profile);
-    if (!token) {
-      fail('Not logged in. Run "confidence login" first.');
-      return;
-    }
-
-    const validation = validateToken(token);
-    if (!validation.valid) {
-      fail('Token is expired. Run "confidence login" to re-authenticate.');
-      return;
-    }
+    const token = await tryResolveAuthToken(profile);
+    if (!token) return;
 
     const payload = decodeJwtPayload(token);
     const email = (payload.email as string) ?? undefined;
-    const org =
-      (payload.org_id as string) ??
-      (payload['https://confidence.dev/org_login_id'] as string) ??
-      undefined;
+    const org = (payload.org_id as string) ?? (payload[ORG_ID_KEY] as string) ?? undefined;
+    const region = payload[REGION_KEY] === 'US' ? 'US' : 'EU';
+    const workspace = (payload[ACCOUNT_KEY] as string) ?? (payload.email as string) ?? undefined;
     const exp = payload.exp as number | undefined;
     const expiresAt = exp ? new Date(exp * 1000).toISOString() : 'unknown';
 
@@ -32,8 +27,8 @@ export const whoamiCommand = {
       data: {
         email: email ?? 'unknown',
         organization: org ?? 'unknown',
-        region: validation.region ?? 'unknown',
-        workspace: validation.workspace ?? 'unknown',
+        region,
+        workspace: workspace ?? 'unknown',
         expires: expiresAt,
         profile: profile ?? 'default',
       },

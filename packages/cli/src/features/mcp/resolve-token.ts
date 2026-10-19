@@ -1,16 +1,14 @@
 import { message, fail } from '@output/print.js';
-import { loadPersistedToken, authenticate, validateToken } from '@spotify-confidence/core';
+import { authenticate } from '@spotify-confidence/core';
+import { tryLoadToken } from '@utils/auth.js';
 
 export async function resolveAuthToken(opts?: {
   forceNew?: boolean;
   profile?: string;
 }): Promise<string | null> {
   if (!opts?.forceNew) {
-    const existing = loadPersistedToken(opts?.profile);
-    if (existing) {
-      const { valid } = validateToken(existing);
-      if (valid) return existing;
-    }
+    const { token } = await tryLoadToken(opts?.profile);
+    if (token) return token;
   }
 
   try {
