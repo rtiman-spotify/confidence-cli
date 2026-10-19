@@ -5,5 +5,11 @@ export {
   type AuthResult,
 } from './authenticate/index.js';
 export { ensureDir, loadPersistedToken, clearTokens } from './credentials/index.js';
-export { decodeJwtPayload, extractRegion, validateToken } from './jwt.js';
+export {
+  decodeJwtPayload,
+  extractOrganization,
+  extractRegion,
+  extractWorkspace,
+  isValidToken,
+} from './jwt.js';
 export { successPage, errorPage, exchangeErrorPage } from './callback-pages.js';

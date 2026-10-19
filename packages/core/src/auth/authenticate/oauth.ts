@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { env } from '../../system/env.js';
 import { readCredentials, writeCredentials } from '../credentials/index.js';
-import { extractRegion, extractOrganization, validateToken } from '../jwt.js';
+import { extractRegion, extractOrganization, extractWorkspace } from '../jwt.js';
 import { successPage, errorPage, exchangeErrorPage } from '../callback-pages.js';
 import {
   AUTH_BASE_URL,
@@ -59,7 +59,7 @@ export async function refreshAccessToken(profile?: string): Promise<AuthResult> 
   persistTokens(data.access_token, data.refresh_token, profile);
 
   const region = extractRegion(data.access_token);
-  const { workspace } = validateToken(data.access_token);
+  const workspace = extractWorkspace(data.access_token);
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
@@ -120,7 +120,7 @@ export function authenticate(opts: {
         persistTokens(access_token, refresh_token, opts.profile);
 
         const region = extractRegion(access_token);
-        const { workspace } = validateToken(access_token);
+        const workspace = extractWorkspace(access_token);
 
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(successPage);

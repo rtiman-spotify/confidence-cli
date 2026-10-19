@@ -1,6 +1,6 @@
 import {
   loadPersistedToken,
-  validateToken,
+  isValidToken as isValid,
   refreshAccessToken,
   authenticate,
   isInteractive,
@@ -13,11 +13,9 @@ type LoadTokenResult = {
 };
 
 export async function tryLoadToken(profile?: string): Promise<LoadTokenResult> {
-  const existing = loadPersistedToken(profile);
-  if (!existing) return { token: null, expired: false };
-
-  const { valid } = validateToken(existing);
-  if (valid) return { token: existing, expired: false };
+  const token = loadPersistedToken(profile);
+  if (!token) return { token: null, expired: false };
+  if (isValid(token)) return { token, expired: false };
 
   try {
     const refreshed = await refreshAccessToken(profile);

@@ -19,24 +19,21 @@ export function extractOrganization(token: string): string | undefined {
   return organization ?? undefined;
 }
 
-export function validateToken(token: string): {
-  valid: boolean;
-  region?: 'EU' | 'US';
-  workspace?: string;
-} {
+export function extractWorkspace(token: string): string | undefined {
+  const payload = decodeJwtPayload(token);
+  return (
+    (payload['https://confidence.dev/account_name'] as string) ??
+    (payload.email as string) ??
+    undefined
+  );
+}
+
+export function isValidToken(token: string): boolean {
   try {
     const payload = decodeJwtPayload(token);
     const exp = payload.exp as number | undefined;
-    if (exp && Date.now() / 1000 > exp) {
-      return { valid: false };
-    }
-    const region = extractRegion(token);
-    const workspace =
-      (payload['https://confidence.dev/account_name'] as string) ??
-      (payload.email as string) ??
-      undefined;
-    return { valid: true, region, workspace };
+    return !exp || Date.now() / 1000 <= exp;
   } catch {
-    return { valid: false };
+    return false;
   }
 }

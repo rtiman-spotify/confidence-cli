@@ -1,5 +1,5 @@
 import { buildTestJwt, buildExpiredJwt, prepareAuthTokens } from '@spotify-confidence/testing/auth';
-import { loadPersistedToken, validateToken, decodeJwtPayload } from '@spotify-confidence/core';
+import { loadPersistedToken, isValidToken, decodeJwtPayload } from '@spotify-confidence/core';
 
 describe('whoami prerequisites', () => {
   it('loads and validates a persisted token', () => {
@@ -8,7 +8,7 @@ describe('whoami prerequisites', () => {
     const token = loadPersistedToken();
 
     expect(token).not.toBeNull();
-    expect(validateToken(token!).valid).toBe(true);
+    expect(isValidToken(token!)).toBe(true);
   });
 
   it('decodes email from the token payload', () => {
@@ -21,9 +21,7 @@ describe('whoami prerequisites', () => {
   });
 
   it('detects an expired token', () => {
-    const sut = validateToken;
-
-    expect(sut(buildExpiredJwt()).valid).toBe(false);
+    expect(isValidToken(buildExpiredJwt())).toBe(false);
   });
 
   it('reads CONFIDENCE_TOKEN env var over persisted tokens', () => {
