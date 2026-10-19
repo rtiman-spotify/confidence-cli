@@ -39,6 +39,17 @@ describe('data command group', () => {
     expect(output).not.toMatch(/onboard|discover|proposal|workflow/iu);
   });
 
+  it('advertises only list and get under entities without authentication', async () => {
+    using _auth = prepareAuthTokens('none');
+    const sut = run;
+
+    const output = await sut(['data', 'entities', '--help']);
+
+    expect(output).toContain('entities list');
+    expect(output).toContain('entities get');
+    expect(output).not.toMatch(/create|update|delete|onboard|workflow/iu);
+  });
+
   it('shows guidance when invoked without a subcommand', async () => {
     const sut = run;
     expect(await sut(['data'])).toContain('confidence data --help');
