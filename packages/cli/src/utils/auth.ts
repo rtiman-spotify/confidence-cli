@@ -56,8 +56,8 @@ export async function tryResolveAuth(profile?: string): Promise<string | null> {
 
     message(`Authenticated as ${result.workspace ?? 'unknown'} (${result.region})`);
     return result.accessToken;
-  } catch {
-    fail('Login failed. Try running "confidence login" to re-authenticate.');
+  } catch (err) {
+    fail(`Login failed: ${(err as Error).message}`);
     return null;
   }
 }
