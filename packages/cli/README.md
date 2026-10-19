@@ -201,6 +201,17 @@ Preview starts a warehouse query and can incur costs. It is not an offline SQL c
 
 The CLI never automatically retries preview or cancels the remote job when local waiting ends. Inspect the returned job reference before deciding what to do next. A lost preview response has an unknown outcome and may have started a job. `--profile` selects authentication; `--dry-run` validates and previews local input without authentication, HTTP calls, writes or telemetry. Input accepts only `query`; unsupported fields are rejected.
 
+## SQL Schema (No Sample-Row Output)
+
+```bash
+confidence data sql schema --name sqlJobs/example --json
+confidence data sql schema --name sqlJobs/example --dry-run --json
+```
+
+Reads the existing job's schema, column issues and table issues through `GetSampleRows`; it never starts or retries a query. **The backend endpoint can return sample rows over the wire.** The CLI immediately projects only schema and issue metadata: sample rows and unrelated result fields are never printed, logged, persisted or sent to telemetry or a model. This is output filtering, not a server-side no-row retrieval guarantee.
+
+Completed results include `state: COMPLETED` and schema/issues arrays. Pending results use `state: PENDING, schema: null`; failed queries use `state: FAILED, schema: null` and their error/reason. A successful inspection exits zero even for pending/failed jobs; HTTP/authentication and malformed-response errors exit nonzero. This is schema inspection, not physical-table discovery or semantic certification. `--profile` selects authentication; `--dry-run` validates names without authentication, HTTP calls, writes or telemetry.
+
 ## License
 
 [Apache License 2.0](../../LICENSE)

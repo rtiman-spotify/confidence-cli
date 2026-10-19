@@ -1,6 +1,7 @@
 import type { Argv } from 'yargs';
 import { noop } from '@spotify-confidence/shared-kernel';
 import { previewSql, showSqlJob } from '@features/data/sql.js';
+import { showSqlSchema } from '@features/data/sql-schema.js';
 import { safely } from '@utils/index.js';
 
 export const sqlCommand = {
@@ -40,6 +41,17 @@ export const sqlCommand = {
             describe: 'Qualified sqlJobs/<id> resource name',
           }),
         safely(showSqlJob),
+      )
+      .command(
+        'schema',
+        'Read schema and issues only (sample rows are discarded)',
+        (y: Argv) =>
+          y.option('name', {
+            type: 'string',
+            demandOption: true,
+            describe: 'Qualified sqlJobs/<id> resource name',
+          }),
+        safely(showSqlSchema),
       )
       .demandCommand(1)
       .strict();
