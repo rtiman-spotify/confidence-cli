@@ -1,5 +1,6 @@
 import type { Argv } from 'yargs';
 import { noop } from '@spotify-confidence/shared-kernel';
+import { sqlCommand } from './data/sql.js';
 
 /** Feature PRs register their subcommands in this group. */
 export const dataCommand = {
@@ -8,6 +9,7 @@ export const dataCommand = {
   builder(yargs: Argv) {
     return yargs
       .usage('$0 data <command> [options]')
+      .command(sqlCommand)
       .demandCommand(1, 'Run "confidence data --help" to see available commands.')
       .strict()
       .help();
